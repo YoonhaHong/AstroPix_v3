@@ -1,0 +1,5 @@
+# Ignore the runlogs folder
+runlogs/
+
+# Ignore any folder that starts with noise_
+noise_*/
