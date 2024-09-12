@@ -3,3 +3,5 @@ runlogs/
 
 # Ignore any folder that starts with noise_
 noise_*/
+
+__pycache__/
