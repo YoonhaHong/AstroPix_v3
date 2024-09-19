@@ -51,11 +51,20 @@ def main(args,row,col,injectPix):
         os.mkdir(args.outdir)
 
     # Prepare everything, create the object
+    attempt = 0
+    max_retries = 3
+
     if args.inject:
         astro = astropixRun(chipversion=args.chipVer, inject=injectPix) #enable injections
     else:
-        astro = astropixRun(chipversion=args.chipVer) #initialize without enabling injections
-
+        try: 
+            astro = astropixRun(chipversion=args.chipVer) #initialize without enabling injections
+        except:
+            if attempt < max_retries:
+                time.sleep(1)
+                astro = astropixRun(chipversion=args.chipVer)
+            else:
+                raise
 
     #Initiate asic with pixel mask as defined in yaml 
     astro.asic_init(yaml=args.yaml)
