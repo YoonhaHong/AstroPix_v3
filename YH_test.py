@@ -59,12 +59,12 @@ def main(args):
     #Initiate asic with pixel mask as defined in yaml and analog pixel in row0 defined with input argument -a
     astro.asic_init(yaml=args.yaml, analog_col = args.analog)
 
-    for r in range(3, 35, 1):
-        for c in range(0, 35, 1):
+    for r in range(0, 35, 1):
+        for c in range(3, 35, 1):
             astro.enable_pixel(c, r)
 
     #APSw08s03_100_summary
-    noise_scan_summary = f"{args.noisescandir}/{args.name}_{args.threshold}_summary.csv"
+    noise_scan_summary = f"{args.noisescandir}/{args.name}_{args.threshold:.0f}_summary.csv"
     nss = pd.read_csv(noise_scan_summary)
     pixels_to_mask = nss[nss['disable'] > 0]
     nmask=0
@@ -72,7 +72,7 @@ def main(args):
 
     for index, row in pixels_to_mask.iterrows():
         print(f"Row: {row['row']}, Col: {row['col']}, Disable: {row['disable']}")
-        astro.disable_pixel(row['col'], row['row'])
+        astro.disable_pixel(int(row['col']), int(row['row']))
         nmask+=1
     print(nmask, " pixels are masked! ")
 
@@ -270,7 +270,7 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Astropix Driver Code')
-    parser.add_argument('-n', '--name', default='', required=False,
+    parser.add_argument('-n', '--name', default='APSw08s03', required=False,
                     help='Option to give additional name to output files upon running')
 
     parser.add_argument('-o', '--outdir', default='../data', required=False,
@@ -282,10 +282,10 @@ if __name__ == "__main__":
     parser.add_argument('-V', '--chipVer', default=3, required=False, type=int,
                     help='Chip version - provide an int')
     
-    parser.add_argument('-ns', '--noisescandir', action='store', required=False, type=str, default ='noisescan',
+    parser.add_argument('-ns', '--noisescandir', action='store', required=False, type=str, default ='./noisescan',
                     help = 'directory path noise scan summary file containing chip noise infomation.')
     
-    parser.add_argument('-s', '--showhits', action='store_true', default=True, required=False,
+    parser.add_argument('-s', '--showhits', action='store_true', default=False, required=False,
                     help='Display hits in real time during data taking')
     
     parser.add_argument('-p', '--plotsave', action='store_true', default=False, required=False,
