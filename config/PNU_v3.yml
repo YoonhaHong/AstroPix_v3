@@ -21,16 +21,10 @@ astropix3:
     geometry:
         cols: 35
         rows: 35
-    configcards:
-        voltagecard:
-            pos: 4
-            dacs: [1.2, 0, 1.1, 1, 0, 0, 0.7, 1.2]
-        injectioncard:
-            pos: 3
     config:
         digitalconfig:
             interrupt_pushpull: [1, 0b1]
-            en_inj:             [18, 0b111111111111111111]
+            en_inj:             [18, 0b0]
             reset:              [1, 0b0]
             extrabits:          [15, 0b0]
 
@@ -43,24 +37,24 @@ astropix3:
             qon3:               [1, 0b1]
 
         idacs:
-            blres:              [6, 1]
+            blres:              [6, 0]
             nu1:                [6, 0]
             vn1:                [6, 20]
-            vnfb:               [6, 1]
-            vnfoll:             [6, 10]
+            vnfb:               [6, 3]
+            vnfoll:             [6, 4]
             nu5:                [6, 0]
             nu6:                [6, 0]
             nu7:                [6, 0]
             nu8:                [6, 0]
             vn2:                [6, 0]
-            vnfoll2:            [6, 2]
+            vnfoll2:            [6, 10]
             vnbias:             [6, 10]
             vpload:             [6, 5]
             nu13:               [6, 60]
             vncomp:             [6, 2]
             vpfoll:             [6, 60]
             nu16:               [6, 0]
-            vprec:              [6, 30]
+            vprec:              [6, 60]
             vnrec:              [6, 30]
 
         vdacs:

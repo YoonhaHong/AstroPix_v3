@@ -51,20 +51,11 @@ def main(args,row,col,injectPix):
         os.mkdir(args.outdir)
 
     # Prepare everything, create the object
-    attempt = 0
-    max_retries = 3
-
     if args.inject:
         astro = astropixRun(chipversion=args.chipVer, inject=injectPix) #enable injections
     else:
-        try: 
-            astro = astropixRun(chipversion=args.chipVer) #initialize without enabling injections
-        except:
-            if attempt < max_retries:
-                time.sleep(1)
-                astro = astropixRun(chipversion=args.chipVer)
-            else:
-                raise
+        astro = astropixRun(chipversion=args.chipVer) #initialize without enabling injections
+
 
     #Initiate asic with pixel mask as defined in yaml 
     astro.asic_init(yaml=args.yaml)
@@ -85,11 +76,15 @@ def main(args,row,col,injectPix):
     if args.inject:
         astro.start_injection()
 
+    strPix = "_col"+str(col)+"_row"+str(row)
+
     i = 0
     if args.maxtime is not None: 
         end_time=time.time()+(args.maxtime*60.)
-    strPix = "_col"+str(col)+"_row"+str(row)
-    fname=strPix if not args.name else args.name+strPix+"_"
+    strPix = "c{0}r{1}_{2}thr".format(        str(col)
+                                              str(row)
+                                              args.threshold)
+    fname= args.name+"_"+strPix+"_"
 
     # Prepares the file paths 
     if args.saveascsv: # Here for csv

@@ -59,9 +59,9 @@ def main(args):
     #Initiate asic with pixel mask as defined in yaml and analog pixel in row0 defined with input argument -a
     astro.asic_init(yaml=args.yaml, analog_col = args.analog)
 
-    #for r in range(3, 35, 1):
-    #    for c in range(0, 35, 1):
-    #        astro.enable_pixel(c, r)
+    for r in range(3, 35, 1):
+        for c in range(0, 35, 1):
+            astro.enable_pixel(c, r)
     astro.init_voltages(vthreshold=args.threshold)     
 
     #If injection, ensure injection pixel is enabled and initialize
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--outdir', default='../data', required=False,
                     help='Output Directory for all datafiles')
 
-    parser.add_argument('-y', '--yaml', action='store', required=False, type=str, default = 'config_v3_masking',
+    parser.add_argument('-y', '--yaml', action='store', required=False, type=str, default = 'testconfig_v3',
                     help = 'filepath (in config/ directory) .yml file containing chip configuration. Default: config/testconfig.yml (All pixels off)')
 
     parser.add_argument('-V', '--chipVer', default=3, required=False, type=int,

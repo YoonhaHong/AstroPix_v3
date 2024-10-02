@@ -52,19 +52,26 @@ def main(args, injv, fpgaCon:bool=True, fpgaDiscon:bool=True):
         logger.info('Initiate FPGA connection')
         astro = astropixRun(chipversion=args.chipVer, inject=args.inject) #initialize with always enabling injections (args.inject is always true)
 
-    astro.init_voltages(vthreshold=args.threshold) 
 
     #Define YAML path variables
     pathdelim=os.path.sep #determine if Mac or Windows separators in path name
 
     #Initiate asic with pixel mask as defined in yaml 
-    astro.asic_init(yaml=config, analog_col=args.inject[1])
+    astro.asic_init(yaml=args.yaml, analog_col=args.inject[1])
+    astro.enable_pixel(args.inject[1],args.inject[0])    
+
+    astro.init_voltages(vthreshold=args.threshold) 
 
     #enable injection
-    astro.enable_pixel(args.inject[1],args.inject[0])    
-    astro.init_injection(inj_voltage=injv, onchip=onchipBool)
+    astro.enable_injection(col=args.inject[1], row=args.inject[0])
+    #astro.init_injection(inj_voltage=injv, onchip=onchipBool)
+    #If using v2, use injection created by injection card
+    #If using v3, use injection created with integrated DACs on chip
+    astro.init_injection(inj_voltage=injv, clkdiv=300)
+
 
     astro.enable_spi() 
+    astro.asic_configure()
     logger.info("Chip configured")
     astro.dump_fpga()
     astro.start_injection()
@@ -72,8 +79,11 @@ def main(args, injv, fpgaCon:bool=True, fpgaDiscon:bool=True):
     i = 0
     if args.maxtime is not None: 
         end_time=time.time()+(args.maxtime*60.)
-    strPix = "r"+str(args.inject[0])+"c"+str(args.inject[1])+"_"+str(injv/1000.)+"VInj_"
-    fname=strPix if not args.name else args.name+strPix+"_"
+    strPix = "c{0}r{1}_{2}inj_{3}thr".format(args.inject[1],
+                                              args.inject[0],
+                                              injv,
+                                              args.threshold)
+    fname= args.name+"_"+strPix+"_"
 
     # Prepares the file paths 
     if args.saveascsv: # Here for csv
@@ -92,7 +102,7 @@ def main(args, injv, fpgaCon:bool=True, fpgaDiscon:bool=True):
                 'hittime'
         ])
     # Save final configuration to output file    
-    ymlpathout=args.outdir+pathdelim+config+"_"+fname+time.strftime("%Y%m%d-%H%M%S")+".yml"
+    ymlpathout=args.outdir+pathdelim+args.yaml+"_"+fname+time.strftime("%Y%m%d-%H%M%S")+".yml"
     astro.write_conf_to_yaml(ymlpathout)
     # And here for the text files/logs
     bitpath = args.outdir + pathdelim + fname + time.strftime("%Y%m%d-%H%M%S") + '.log'
@@ -113,7 +123,7 @@ def main(args, injv, fpgaCon:bool=True, fpgaDiscon:bool=True):
                 # Writes the hex version to hits
                 bitfile.write(f"{i}\t{str(binascii.hexlify(readout))}\n")
                 print(binascii.hexlify(readout))
-                hits = astro.decode_readout(readout, i, printer = True)
+                hits = astro.decode_readout(readout, i, args.chipVer, printer = True)
                 i += 1
                 # If we are saving a csv this will write it out. 
                 if args.saveascsv:
@@ -145,17 +155,19 @@ def main(args, injv, fpgaCon:bool=True, fpgaDiscon:bool=True):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Astropix Driver Code')
-    parser.add_argument('-n', '--name', default='', required=False,
+    parser.add_argument('-n', '--name', default='injectionscan', required=False,
                     help='Option to give additional name to output files upon running')
 
     parser.add_argument('-o', '--outdir', default='.', required=False,
                     help='Output Directory for all datafiles')
     
-    parser.add_argument('-V', '--chipVer', default=2, required=False, type=int,
+    parser.add_argument('-V', '--chipVer', default=3, required=False, type=int,
                     help='Chip version - provide an int')
 
-    parser.add_argument('-c', '--saveascsv', action='store_true', 
-                    default=False, required=False, 
+    parser.add_argument('-y', '--yaml', action='store', required=False, type=str, default = 'testconfig_v3',
+                    help = 'filepath (in config/ directory) .yml file containing chip configuration. Default: config/testconfig.yml (All pixels off)')
+
+    parser.add_argument('-c', '--saveascsv', action='store_true', default=True, required=False, 
                     help='save output files as CSV. If False, save as txt. Default: FALSE')
     
     parser.add_argument('-t', '--threshold', type = float, action='store', default=80,
@@ -193,10 +205,6 @@ if __name__ == "__main__":
     #If using v2, use injection created by injection card
     #If using v3, use injection created with integrated DACs on chip
     onchipBool = True if args.chipVer > 2 else False
-
-    #If using v2, use config_none
-    #If using v3, use config_v3_none
-    config = 'config_v3_none' if args.chipVer > 2 else 'config_none'
 
     injs = [args.injectRange[0]+(args.injectStep*x) for x in range(int((args.injectRange[1]-args.injectRange[0])/args.injectStep) + 1)]
     for i in injs:
